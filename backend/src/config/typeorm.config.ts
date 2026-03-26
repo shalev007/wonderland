@@ -14,7 +14,7 @@ export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
     password: config.password,
     database: config.database,
     entities: [__dirname + '/../**/*.entity.{ts,js}'],
-    synchronize: false,
+    synchronize: true,
     namingStrategy: new SnakeNamingStrategy(),
   }),
 };

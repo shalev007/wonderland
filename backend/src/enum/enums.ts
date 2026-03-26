@@ -18,7 +18,7 @@ export const DeviceAvailabilityStatusEnum = {
 export type DeviceAvailabilityStatusEnum =
   (typeof DeviceAvailabilityStatusEnum)[keyof typeof DeviceAvailabilityStatusEnum];
 
-export enum RadarType {
-  KELA = 'kela',
-  HUNTER = 'hunter',
+export enum CameraType {
+  SIMPLE_PTZ = 'SIMPLE_PTZ',
+  THERMAL_PTZ = 'THERMAL_PTZ',
 }
