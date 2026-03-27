@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DeviceAvailabilityStatusEnum } from '@/enum/enums';
@@ -21,6 +22,7 @@ export class CameraService implements OnModuleInit {
     private readonly cameraGateway: CameraGateway,
     @InjectRepository(CameraEntity)
     private readonly cameraRepository: Repository<CameraEntity>,
+    private readonly configService: ConfigService,
   ) {}
 
   async onModuleInit() {
@@ -74,16 +76,23 @@ export class CameraService implements OnModuleInit {
         const highResPath = `${camera.id}_high`;
         const lowResPath = `${camera.id}_low`;
 
+        const recordingsPath =
+          this.configService.get<string>('RECORDINGS_PATH') || '/recordings';
+
         await this.mediamtxService.addPath({
           name: highResPath,
           source: camera.getHighResSource(),
           sourceOnDemand: true,
+          record: true,
+          recordPath: `${recordingsPath}/%path/%Y-%m-%d_%H-%M-%S-%f`,
         });
 
         await this.mediamtxService.addPath({
           name: lowResPath,
           source: camera.getLowResSource(),
           sourceOnDemand: false,
+          record: true,
+          recordPath: `${recordingsPath}/%path/%Y-%m-%d_%H-%M-%S-%f`,
         });
 
         this.logger.log(

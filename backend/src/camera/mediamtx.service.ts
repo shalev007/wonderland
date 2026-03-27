@@ -12,6 +12,13 @@ export interface MediaMTXPathConfig {
   name: string;
   source: string;
   sourceOnDemand?: boolean;
+  record?: boolean;
+  recordPath?: string;
+  recordFormat?: 'fmp4' | 'ts';
+  recordPartDuration?: string;
+  recordPartMaxSize?: string;
+  recordSegmentDuration?: string;
+  recordDeleteAfter?: string;
 }
 
 @Injectable()
@@ -35,6 +42,12 @@ export class MediaMTXService {
         this.httpService.post(url, {
           source: config.source,
           sourceOnDemand: config.sourceOnDemand ?? true,
+          record: config.record ?? false,
+          recordPath: config.recordPath,
+          recordFormat: config.recordFormat ?? 'fmp4',
+          recordPartDuration: config.recordPartDuration ?? '1s',
+          recordSegmentDuration: config.recordSegmentDuration ?? '1h',
+          recordDeleteAfter: config.recordDeleteAfter ?? '10d',
         }),
       );
       this.logger.log(`Successfully registered path: ${config.name}`);

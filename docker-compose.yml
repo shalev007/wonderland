@@ -43,6 +43,7 @@ services:
       - "8199:8199"
     volumes:
       - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
+      - ./recordings:/recordings
     networks:
       - magenim-net
     restart: unless-stopped
