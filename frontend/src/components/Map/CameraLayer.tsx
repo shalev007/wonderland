@@ -26,6 +26,7 @@ export const CameraLayer = () => {
       if (!map.isStyleLoaded()) return;
 
       if (!map.getSource(CAMERA_SOURCE)) {
+        console.log('CameraLayer: Initializing sources and layers');
         map.addSource(CAMERA_SOURCE, {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: [] },
@@ -107,9 +108,11 @@ export const CameraLayer = () => {
       setupLayers();
     }
     map.on('styledata', setupLayers);
+    map.on('idle', setupLayers);
 
     return () => {
       map.off('styledata', setupLayers);
+      map.off('idle', setupLayers);
       try {
         if (map.getStyle()) {
           [
@@ -133,11 +136,9 @@ export const CameraLayer = () => {
 
   // 2. Data Updates
   useEffect(() => {
-    if (!map) return;
+    if (!map || !map.isStyleLoaded()) return;
 
     const updateData = () => {
-      if (!map.isStyleLoaded()) return;
-
       const source = map.getSource(CAMERA_SOURCE) as GeoJSONSource;
       const fovSource = map.getSource(CAMERA_FOV_SOURCE) as GeoJSONSource;
 
@@ -153,7 +154,7 @@ export const CameraLayer = () => {
               availability: c.availability || 'AVAILABLE',
             },
           }));
-
+        
         source.setData({
           type: 'FeatureCollection',
           features,
