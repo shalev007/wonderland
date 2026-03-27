@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+import { useFullscreen } from '@mantine/hooks';
+import { useState, type ReactNode } from 'react';
+import clsx from 'clsx';
 import {
   videoTileVideo,
   videoTile,
@@ -13,12 +15,18 @@ import WebRtcVideo from '../WebRtcVideo/WebRtcVideo';
 type VideoTileProps = {
   streamUrl: string;
   topBarContent?: ReactNode;
-  bottomBarContent?: ReactNode;
+  bottomBarContent?: ReactNode | ((props: { toggleFullscreen: () => void; onPopOverToggle: (opened: boolean) => void }) => ReactNode);
 };
 
 const VideoTile = ({ streamUrl, topBarContent, bottomBarContent }: VideoTileProps) => {
+  const { ref, toggle } = useFullscreen();
+  const [isPopOverOpen, setIsPopOverOpen] = useState(false);
+
   return (
-    <div className={videoTile}>
+    <div
+      ref={ref}
+      className={clsx(videoTile, isPopOverOpen && 'is-popover-open')}
+    >
       <WebRtcVideo className={videoTileVideo} streamUrl={streamUrl} />
 
       {topBarContent ? (
@@ -29,7 +37,12 @@ const VideoTile = ({ streamUrl, topBarContent, bottomBarContent }: VideoTileProp
 
       {bottomBarContent ? (
         <div className={`${videoTileBar} ${videoTileBarBottom} ${videoTileBarHover}`}>
-          {bottomBarContent}
+          {typeof bottomBarContent === 'function'
+            ? bottomBarContent({
+                toggleFullscreen: toggle,
+                onPopOverToggle: setIsPopOverOpen,
+              })
+            : bottomBarContent}
         </div>
       ) : null}
     </div>

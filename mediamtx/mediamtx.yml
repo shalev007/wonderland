@@ -1,0 +1,60 @@
+# MediaMTX configuration
+# Support for WebRTC in local environment
+
+paths:
+  all:
+    # Enable WebRTC for all paths by default
+    source: publisher
+
+# API settings
+api: yes
+apiAddress: :9997
+
+# WebRTC settings
+webrtc: true
+webrtcAddress: ":8889"
+webrtcEncryption: false
+webrtcServerKey: server.key
+webrtcServerCert: server.crt
+webrtcAllowOrigins: ["*"]
+webrtcTrustedProxies: []
+webrtcLocalUDPAddress: ":8189"
+webrtcLocalTCPAddress: ":8199"
+webrtcIPsFromInterfaces: true
+webrtcIPsFromInterfacesList: []
+webrtcAdditionalHosts: []
+webrtcICEServers2: []
+
+# RTSP settings
+rtsp: yes
+rtspAddress: :8554
+
+# RTMP settings
+rtmp: yes
+rtmpAddress: :1935
+
+# HLS settings
+hls: yes
+hlsAddress: :8888
+
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass: null
+    ips: []
+    permissions:
+      - action: publish
+        path: null
+      - action: read
+        path: null
+      - action: playback
+        path: null
+      - action: api
+      - action: metrics
+      - action: pprof
+authHTTPAddress: null
+authHTTPExclude:
+  - action: api
+  - action: metrics
+  - action: pprof
+authJWTJWKS: null

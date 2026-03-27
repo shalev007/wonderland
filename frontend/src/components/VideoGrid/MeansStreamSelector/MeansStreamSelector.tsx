@@ -2,7 +2,7 @@ import { Box, Button, TextInput, UnstyledButton } from '@mantine/core';
 import { useClickOutside } from '@mantine/hooks';
 import { ChevronUp, Plus, Search, Video } from 'lucide-react';
 import type { CSSProperties, RefObject } from 'react';
-import { useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { meansStreamSelectorStyles } from './MeansStreamSelector.css';
 import MeansStreamListScroll from './MeansStreamListScroll/MeansStreamListScroll';
 import type { Camera } from '@src/types';
@@ -13,7 +13,7 @@ const SELECT_PLACEHOLDER = 'בחירה...';
 const SEARCH_PLACEHOLDER = 'חיפוש לפי שם אמצעי';
 const EMPTY_RESULTS_TEXT = 'לא נמצאו תוצאות...';
 
-const filterCamerasBySearch = (
+export const filterCamerasBySearch = (
   cameras: Camera[],
   search: string,
 ): Camera[] => {
@@ -109,21 +109,25 @@ const StreamOptionsList = ({ options, onPick }: StreamOptionsListProps) => {
   );
 };
 
-type StreamPickerDropdownProps = {
+export type StreamPickerDropdownProps = {
   search: string;
   onSearchChange: (value: string) => void;
   options: Camera[];
   onPick: (id: string) => void;
+  className?: string;
+  style?: React.CSSProperties;
 };
 
-const StreamPickerDropdown = ({
+export const StreamPickerDropdown = ({
   search,
   onSearchChange,
   options,
   onPick,
+  className,
+  style,
 }: StreamPickerDropdownProps) => {
   return (
-    <Box className={meansStreamSelectorStyles.customDropdown}>
+    <Box className={className ?? meansStreamSelectorStyles.customDropdown} style={style}>
       <StreamSearchField value={search} onChange={onSearchChange} />
       <MeansStreamListScroll>
         <Box className={meansStreamSelectorStyles.customOptionsContainer}>

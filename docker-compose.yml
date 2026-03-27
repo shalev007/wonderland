@@ -30,6 +30,23 @@ services:
       - magenim-net
     restart: unless-stopped
 
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: wonderland-mediamtx
+    ports:
+      - "8554:8554"
+      - "1935:1935"
+      - "8888:8888"
+      - "8889:8889"
+      - "9997:9997"
+      - "8189:8189/udp"
+      - "8199:8199"
+    volumes:
+      - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
+    networks:
+      - magenim-net
+    restart: unless-stopped
+
 networks:
   magenim-net:
     driver: bridge

@@ -1,9 +1,13 @@
 import { Fullscreen } from 'lucide-react';
 import MeansActionButton from './MeansActionButton';
 
-const FullscreenMeansButton = () => {
+type FullscreenMeansButtonProps = {
+  toggleFullscreen: () => void;
+};
+
+const FullscreenMeansButton = ({ toggleFullscreen }: FullscreenMeansButtonProps) => {
   return (
-    <MeansActionButton>
+    <MeansActionButton onClick={toggleFullscreen}>
       <Fullscreen size={15} />
     </MeansActionButton>
   );

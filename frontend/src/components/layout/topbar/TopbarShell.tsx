@@ -20,7 +20,6 @@ export function TopbarShell({ left, center, right}: TopbarShellProps) {
     <div className={topBarShellStyles.root}>
       <div className={topBarShellStyles.rightSection}>
           <div className={topBarShellStyles.rightSectionInner}>
-            <GroupFourLogo/>
             <OneHundredLogo/>
             <Divider
               orientation="vertical"
@@ -28,8 +27,7 @@ export function TopbarShell({ left, center, right}: TopbarShellProps) {
               color={colors.border}
               style={{height: 45, alignSelf: 'center'}}
             />
-            <MagenimLogo/>
-            <MagenimLabel/>
+            <span className={topBarShellStyles.title}>ארץ הפלאות</span>
             {right}
           </div>
       </div>

@@ -36,8 +36,14 @@ const VideoGrid = ({ count = 3 }: VideoGridProps) => {
           >
             {camera ? (
               <VideoTile
-                streamUrl={camera.visualStream}
-                bottomBarContent={<MeansActionBar />}
+                streamUrl={`http://127.0.0.1:8889/${camera.id}_${i === 0 ? 'high' : 'low'}`}
+                bottomBarContent={({ toggleFullscreen, onPopOverToggle }) => (
+                  <MeansActionBar
+                    slotIndex={i}
+                    toggleFullscreen={toggleFullscreen}
+                    onPopOverToggle={onPopOverToggle}
+                  />
+                )}
                 topBarContent={
                   <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.60)' }}>
                     {camera.name}

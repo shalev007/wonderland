@@ -4,12 +4,14 @@ import { meansActionBarStyles } from '../MeansActionBar.css';
 
 type MeansActionButtonProps = {
   children: ReactNode;
+  onClick?: () => void;
 };
 
-const MeansActionButton = ({ children }: MeansActionButtonProps) => {
+const MeansActionButton = ({ children, onClick }: MeansActionButtonProps) => {
   return (
     <UnstyledButton
       className={`${meansActionBarStyles.baseButton} ${meansActionBarStyles.buttonBaseHover}`}
+      onClick={onClick}
     >
       {children}
     </UnstyledButton>

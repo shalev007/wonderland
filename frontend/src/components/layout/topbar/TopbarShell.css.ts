@@ -61,4 +61,12 @@ export const topBarShellStyles = {
     display: 'flex',
     justifyContent: 'center',
   }),
+
+  title: style({
+    fontSize: '24px',
+    fontWeight: 'bold',
+    lineHeight: '1.2',
+    letterSpacing: '1px',
+    color: '  #ffe9c9ff',
+  })
 };

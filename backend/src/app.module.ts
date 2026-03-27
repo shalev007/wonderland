@@ -12,6 +12,6 @@ import DHCPService from './dhcp';
     TypeOrmModule.forRootAsync(typeOrmConfig),
     CameraModule,
   ],
-  providers: [Logger, DHCPService],
+  providers: [Logger, /*DHCPService*/],
 })
 export class AppModule {}

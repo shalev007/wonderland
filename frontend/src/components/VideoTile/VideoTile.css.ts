@@ -47,5 +47,9 @@ export const videoTileBarHover = style({
       opacity: 1,
       transform: 'translateY(0)',
     },
+    [`${videoTile}.is-popover-open &`]: {
+      opacity: 1,
+      transform: 'translateY(0)',
+    },
   },
 });

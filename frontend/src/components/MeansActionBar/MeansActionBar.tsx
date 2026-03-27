@@ -2,12 +2,20 @@ import { Flex } from '@mantine/core';
 import {
   ControlMeansButton,
   FullscreenMeansButton,
-  GaugeMeansButton,
-  RotateMeansButton,
-  ScanFaceMeansButton,
+  SwitchMeansButton,
 } from './components';
 
-const MeansActionBar = () => {
+type MeansActionBarProps = {
+  slotIndex: number;
+  toggleFullscreen: () => void;
+  onPopOverToggle: (opened: boolean) => void;
+};
+
+const MeansActionBar = ({
+  slotIndex,
+  toggleFullscreen,
+  onPopOverToggle,
+}: MeansActionBarProps) => {
   return (
     <Flex
       mih={50}
@@ -19,10 +27,8 @@ const MeansActionBar = () => {
       p="0 12px"
     >
       <ControlMeansButton />
-      <GaugeMeansButton />
-      <RotateMeansButton />
-      <FullscreenMeansButton />
-      <ScanFaceMeansButton />
+      <FullscreenMeansButton toggleFullscreen={toggleFullscreen} />
+      <SwitchMeansButton slotIndex={slotIndex} onPopOverToggle={onPopOverToggle} />
     </Flex>
   );
 };
