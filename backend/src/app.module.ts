@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { appConfig } from './config/app.config';
 import { typeOrmConfig } from './config/typeorm.config';
 import { CameraModule } from './camera/camera.module';
+import { SelfLocationModule } from './self-location/self-location.module';
 import DHCPService from './dhcp';
 
 @Module({
@@ -11,6 +12,7 @@ import DHCPService from './dhcp';
     ConfigModule.forRoot(appConfig),
     TypeOrmModule.forRootAsync(typeOrmConfig),
     CameraModule,
+    SelfLocationModule,
   ],
   providers: [Logger, /*DHCPService*/],
 })

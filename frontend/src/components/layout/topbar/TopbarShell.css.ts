@@ -68,5 +68,10 @@ export const topBarShellStyles = {
     lineHeight: '1.2',
     letterSpacing: '1px',
     color: '  #ffe9c9ff',
-  })
+  }),
+  logo: style({
+    height: '40px',
+    width: 'auto',
+    objectFit: 'contain',
+  }),
 };

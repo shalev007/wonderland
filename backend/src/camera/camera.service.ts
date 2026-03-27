@@ -157,7 +157,6 @@ export class CameraService implements OnModuleInit {
         // We need to map it to degrees. assuming 180 degrees range or similar.
         // For simplicity, let's assume status.pan is offset in degrees if the camera supports it,
         // or map -1..1 to -180..180.
-        console.log(status);
         const panOffset = status.pan * 180;
         const currentAzimuth = (initialAzimuth + panOffset + 360) % 360;
         const currentFOV = camera.calculateFOV(status.zoom);

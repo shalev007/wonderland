@@ -126,7 +126,6 @@ export abstract class BaseCamera implements Camera {
         }
 
         const position = status.position;
-        console.log(status);
         if (!position) return resolve(null);
 
         resolve({

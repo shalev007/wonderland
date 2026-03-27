@@ -9,6 +9,9 @@ import { MapToolsOverlay } from '../mapTools/MapToolsOverlay';
 import { subscribeMapResizeToContainer } from '../../utils/mapViewResize';
 import { useMapClickStore } from '../../stores/useMapClick';
 import { CameraLayer } from './CameraLayer';
+import { MapContextMenu } from './MapContextMenu';
+import { useMapContextMenu } from '../../stores/useMapContextMenu';
+import { SelfLocationLayer } from './SelfLocationLayer';
 
 if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
   maplibregl.setRTLTextPlugin('/mapbox-gl-rtl-text.min.js', true);
@@ -45,6 +48,12 @@ const MapView = () => {
 
     map.on('click', (e) => {
       useMapClickStore.getState().triggerCallback(e.lngLat.lng, e.lngLat.lat);
+      useMapContextMenu.getState().closeMenu();
+    });
+
+    map.on('contextmenu', (e) => {
+      e.preventDefault();
+      useMapContextMenu.getState().openMenu(e.point.x, e.point.y, e.lngLat.lng, e.lngLat.lat);
     });
 
     mapRef.current = map;
@@ -68,6 +77,8 @@ const MapView = () => {
           <MeasurementPanel />
           <MapToolsOverlay />
           <CameraLayer />
+          <SelfLocationLayer />
+          <MapContextMenu />
         </Box>
       </div>
     </MapProvider>
