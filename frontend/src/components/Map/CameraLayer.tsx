@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useMap } from '../../contexts/MapContext';
 import { useCameras } from '../../hooks/useCameras';
+import { useCameraUpdates } from '../../hooks/useCameraUpdates';
+import { createSector } from '../../utils/geo';
 import type { GeoJSONSource } from 'maplibre-gl';
 
 const CAMERA_SOURCE = 'camera-source';
@@ -8,25 +10,41 @@ const CAMERA_OUTER_LAYER = 'camera-outer-layer';
 const CAMERA_FILL_LAYER = 'camera-fill-layer';
 const CAMERA_INNER_LAYER = 'camera-inner-layer';
 const CAMERA_LABEL_LAYER = 'camera-label-layer';
+const CAMERA_FOV_SOURCE = 'camera-fov-source';
+const CAMERA_FOV_LAYER = 'camera-fov-layer';
 
 export const CameraLayer = () => {
   const map = useMap();
   const { data: cameras } = useCameras();
+  const cameraUpdates = useCameraUpdates();
 
+  // 1. Initial Source/Layer Setup
   useEffect(() => {
     if (!map) return;
 
-    const syncState = () => {
-      // 1. Ensure Style is loaded
-      if (!map.isStyleLoaded()) {
-        return;
-      }
+    const setupLayers = () => {
+      if (!map.isStyleLoaded()) return;
 
-      // 2. Ensure Source & Layers exist
       if (!map.getSource(CAMERA_SOURCE)) {
         map.addSource(CAMERA_SOURCE, {
           type: 'geojson',
           data: { type: 'FeatureCollection', features: [] },
+        });
+
+        map.addSource(CAMERA_FOV_SOURCE, {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        });
+
+        map.addLayer({
+          id: CAMERA_FOV_LAYER,
+          type: 'fill',
+          source: CAMERA_FOV_SOURCE,
+          paint: {
+            'fill-color': '#00FF00',
+            'fill-opacity': 0.2,
+            'fill-outline-color': '#00FF00',
+          },
         });
 
         map.addLayer({
@@ -83,9 +101,46 @@ export const CameraLayer = () => {
           },
         });
       }
+    };
 
-      // 3. Update Data
+    if (map.isStyleLoaded()) {
+      setupLayers();
+    }
+    map.on('styledata', setupLayers);
+
+    return () => {
+      map.off('styledata', setupLayers);
+      try {
+        if (map.getStyle()) {
+          [
+            CAMERA_LABEL_LAYER,
+            CAMERA_INNER_LAYER,
+            CAMERA_FILL_LAYER,
+            CAMERA_OUTER_LAYER,
+            CAMERA_FOV_LAYER,
+          ].forEach((id) => {
+            if (map.getLayer(id)) map.removeLayer(id);
+          });
+          [CAMERA_SOURCE, CAMERA_FOV_SOURCE].forEach((sourceId) => {
+            if (map.getSource(sourceId)) map.removeSource(sourceId);
+          });
+        }
+      } catch (e) {
+        console.warn('CameraLayer cleanup omitted:', e);
+      }
+    };
+  }, [map]);
+
+  // 2. Data Updates
+  useEffect(() => {
+    if (!map) return;
+
+    const updateData = () => {
+      if (!map.isStyleLoaded()) return;
+
       const source = map.getSource(CAMERA_SOURCE) as GeoJSONSource;
+      const fovSource = map.getSource(CAMERA_FOV_SOURCE) as GeoJSONSource;
+
       if (source && cameras) {
         const features = cameras
           .filter((c) => c.position)
@@ -104,36 +159,33 @@ export const CameraLayer = () => {
           features,
         });
       }
-    };
 
-    // Run setup immediately if possible
-    syncState();
+      if (fovSource && cameras) {
+        const fovFeatures = cameras
+          .filter((c) => c.position && cameraUpdates[c.id])
+          .map((c) => {
+            const update = cameraUpdates[c.id];
+            return {
+              type: 'Feature' as const,
+              geometry: createSector(
+                c.position!.coordinates,
+                500,
+                update.azimuth,
+                update.fov,
+              ),
+              properties: { id: c.id },
+            };
+          });
 
-    // Listen to events that might require us to re-run the sync
-    map.on('idle', syncState);
-    map.on('styledata', syncState);
-
-    return () => {
-      map.off('idle', syncState);
-      map.off('styledata', syncState);
-
-      try {
-        if (map.getStyle && map.getStyle()) {
-          if (map.getLayer(CAMERA_LABEL_LAYER))
-            map.removeLayer(CAMERA_LABEL_LAYER);
-          if (map.getLayer(CAMERA_INNER_LAYER))
-            map.removeLayer(CAMERA_INNER_LAYER);
-          if (map.getLayer(CAMERA_FILL_LAYER))
-            map.removeLayer(CAMERA_FILL_LAYER);
-          if (map.getLayer(CAMERA_OUTER_LAYER))
-            map.removeLayer(CAMERA_OUTER_LAYER);
-          if (map.getSource(CAMERA_SOURCE)) map.removeSource(CAMERA_SOURCE);
-        }
-      } catch (e) {
-        console.warn('CameraLayer cleanup omitted:', e);
+        fovSource.setData({
+          type: 'FeatureCollection',
+          features: fovFeatures,
+        });
       }
     };
-  }, [map, cameras]);
+
+    updateData();
+  }, [map, cameras, cameraUpdates]);
 
   return null;
 };

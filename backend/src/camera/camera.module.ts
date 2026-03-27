@@ -5,10 +5,17 @@ import { MediaMTXService } from './mediamtx.service';
 import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CameraEntity } from './entities/camera.entity';
+import { CameraGateway } from './camera.gateway';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [HttpModule, TypeOrmModule.forFeature([CameraEntity])],
+  imports: [
+    HttpModule,
+    TypeOrmModule.forFeature([CameraEntity]),
+    ScheduleModule.forRoot(),
+  ],
   controllers: [CameraController],
-  providers: [CameraService, MediaMTXService],
+  providers: [CameraService, MediaMTXService, CameraGateway],
+  exports: [CameraService],
 })
 export class CameraModule {}

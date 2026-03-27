@@ -14,6 +14,8 @@ export interface Camera {
   getLowResSource(): string;
   initOnvif(): Promise<void>;
   handleMoveRequest(pan: number, tilt: number, zoom: number): void;
+  getPTZStatus(): Promise<{ pan: number; zoom: number } | null>;
+  calculateFOV(zoom: number): number;
   stop(): void;
 }
 
@@ -103,6 +105,40 @@ export abstract class BaseCamera implements Camera {
     }
   }
 
+  async getPTZStatus(): Promise<{ pan: number; zoom: number } | null> {
+    if (!this.onvifCam) return null;
+    const profileToken =
+      this.onvifCam.activeSource?.profileToken ||
+      this.onvifCam.profiles[0]?.['$']?.token;
+
+    if (!profileToken) {
+      this.logger.warn(`No active ONVIF profile found for camera ${this.id}`);
+      return null;
+    }
+
+    return new Promise((resolve) => {
+      this.onvifCam.getStatus({ profileToken }, (err: any, status: any) => {
+        if (err) {
+          this.logger.error(
+            `Failed to get status for camera ${this.id}: ${err.message}`,
+          );
+          return resolve(null);
+        }
+
+        const position = status.position;
+        console.log(status);
+        if (!position) return resolve(null);
+
+        resolve({
+          pan: position.x ?? 0,
+          zoom: position.zoom ?? 0,
+        });
+      });
+    });
+  }
+
+  abstract calculateFOV(zoom: number): number;
+
   stop(): void {
     if (this.moveTimeout) {
       clearTimeout(this.moveTimeout);
@@ -127,6 +163,7 @@ export abstract class BaseCamera implements Camera {
   }
 }
 
+import { calculateFOV } from './utils';
 export class SimplePtzCamera extends BaseCamera {
   getHighResSource(): string {
     return `rtsp://${this.username}:${this.password}@${this.ip}:554/cam/realmonitor?channel=1&subtype=0&unicast=true&proto=Onvif`;
@@ -134,6 +171,10 @@ export class SimplePtzCamera extends BaseCamera {
 
   getLowResSource(): string {
     return `rtsp://${this.username}:${this.password}@${this.ip}:554/cam/realmonitor?channel=1&subtype=1&unicast=true&proto=Onvif`;
+  }
+
+  calculateFOV(zoom: number): number {
+    return calculateFOV(zoom, 4.8, 4.7, 94.0, 30);
   }
 }
 
@@ -144,6 +185,11 @@ export class ThermalPtzCamera extends BaseCamera {
 
   getLowResSource(): string {
     return `rtsp://${this.username}:${this.password}@${this.ip}:554/cam/realmonitor?channel=1&subtype=1&unicast=true&proto=Onvif`;
+  }
+
+  calculateFOV(zoom: number): number {
+    // Thermal camera often have different lenses and FOV parameters
+    return calculateFOV(zoom, 3.2, 7.5, 7.5, 1); // Mocked values for thermal
   }
 
   move(pan: number, tilt: number, zoom: number): void {

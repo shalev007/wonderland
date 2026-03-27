@@ -5,6 +5,8 @@ import { DeviceAvailabilityStatusEnum } from '@/enum/enums';
 import { MediaMTXService } from './mediamtx.service';
 import { Camera, CameraFactory } from './camera.model';
 import { CameraEntity } from './entities/camera.entity';
+import { CameraGateway } from './camera.gateway';
+import { Interval } from '@nestjs/schedule';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -16,6 +18,7 @@ export class CameraService implements OnModuleInit {
 
   constructor(
     private readonly mediamtxService: MediaMTXService,
+    private readonly cameraGateway: CameraGateway,
     @InjectRepository(CameraEntity)
     private readonly cameraRepository: Repository<CameraEntity>,
   ) {}
@@ -129,6 +132,38 @@ export class CameraService implements OnModuleInit {
     this.cameraEntities.set(numericId, entity);
 
     return entity;
+  }
+
+  @Interval(2000)
+  async pollCameraStatus() {
+    for (const camera of this.cameras) {
+      try {
+        const status = await camera.getPTZStatus();
+        if (!status) continue;
+
+        const entity = this.cameraEntities.get(camera.id);
+        const initialAzimuth = entity?.initialAzimuth || 0;
+
+        // ONVIF Pan is typically -1 to 1.
+        // We need to map it to degrees. assuming 180 degrees range or similar.
+        // For simplicity, let's assume status.pan is offset in degrees if the camera supports it,
+        // or map -1..1 to -180..180.
+        console.log(status);
+        const panOffset = status.pan * 180;
+        const currentAzimuth = (initialAzimuth + panOffset + 360) % 360;
+        const currentFOV = camera.calculateFOV(status.zoom);
+
+        this.cameraGateway.broadcastCameraUpdate({
+          id: camera.id.toString(),
+          azimuth: currentAzimuth,
+          fov: currentFOV,
+        });
+      } catch (error) {
+        this.logger.error(
+          `Error polling status for camera ${camera.id}: ${error.message}`,
+        );
+      }
+    }
   }
 
   async getAllCamerasWithData() {
