@@ -37,33 +37,77 @@ export class MediaMTXService {
 
   async addPath(config: MediaMTXPathConfig): Promise<void> {
     const url = `${this.baseUrl}/v3/config/paths/add/${config.name}`;
+    const payload = {
+      source: config.source,
+      sourceOnDemand: config.sourceOnDemand ?? true,
+      record: config.record ?? false,
+      recordPath: config.recordPath,
+      recordFormat: config.recordFormat ?? 'fmp4',
+      recordPartDuration: config.recordPartDuration ?? '10s',
+      recordSegmentDuration: config.recordSegmentDuration ?? '10m',
+      recordDeleteAfter: config.recordDeleteAfter ?? '10d',
+      playback: true,
+    };
+
     try {
-      await firstValueFrom(
-        this.httpService.post(url, {
-          source: config.source,
-          sourceOnDemand: config.sourceOnDemand ?? true,
-          record: config.record ?? false,
-          recordPath: config.recordPath,
-          recordFormat: config.recordFormat ?? 'fmp4',
-          recordPartDuration: config.recordPartDuration ?? '10s',
-          recordSegmentDuration: config.recordSegmentDuration ?? '10m',
-          recordDeleteAfter: config.recordDeleteAfter ?? '10d',
-          playback: true,
-        }),
-      );
+      await firstValueFrom(this.httpService.post(url, payload));
       this.logger.log(`Successfully registered path: ${config.name}`);
     } catch (error) {
       if (
         error.response?.status === 400 &&
         error.response?.data?.error?.includes('already exists')
       ) {
-        this.logger.warn(`Path ${config.name} already exists in MediaMTX`);
+        this.logger.warn(
+          `Path ${config.name} already exists in MediaMTX. Checking for source mismatch...`,
+        );
+
+        try {
+          const currentConfig = await this.getPathConfig(config.name);
+          if (currentConfig && currentConfig.source !== config.source) {
+            this.logger.log(
+              `Source mismatch for ${config.name}: current='${currentConfig.source}', new='${config.source}'. Updating...`,
+            );
+            await this.patchPath(config.name, { source: config.source });
+            this.logger.log(`Successfully updated path source: ${config.name}`);
+          } else {
+            this.logger.log(`Source matches for ${config.name}. No update needed.`);
+          }
+        } catch (getConfigError) {
+          this.logger.error(
+            `Failed to verify/update existing path ${config.name}: ${getConfigError.message}`,
+          );
+        }
         return;
       }
 
       this.logger.error(
         `Failed to register path ${config.name}: ${error.message}`,
         error.stack,
+      );
+      throw error;
+    }
+  }
+
+  async getPathConfig(name: string): Promise<any> {
+    const url = `${this.baseUrl}/v3/config/paths/get/${name}`;
+    try {
+      const response = await firstValueFrom(this.httpService.get(url));
+      return response.data;
+    } catch (error) {
+      this.logger.error(
+        `Failed to get path config for ${name}: ${error.message}`,
+      );
+      throw error;
+    }
+  }
+
+  async patchPath(name: string, config: any): Promise<void> {
+    const url = `${this.baseUrl}/v3/config/paths/patch/${name}`;
+    try {
+      await firstValueFrom(this.httpService.patch(url, config));
+    } catch (error) {
+      this.logger.error(
+        `Failed to patch path config for ${name}: ${error.message}`,
       );
       throw error;
     }

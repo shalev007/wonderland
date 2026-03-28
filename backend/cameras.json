@@ -1,16 +1,16 @@
 [
-{
+  {
     "id": 1,
     "type": "SIMPLE_PTZ",
     "ip": "192.168.137.2",
     "username": "admin",
     "password": "123456"
-},
-{
+  },
+  {
     "id": 2,
     "type": "SIMPLE_PTZ",
     "ip": "192.168.137.2",
     "username": "admin",
     "password": "123456"
-}
+  }
 ]

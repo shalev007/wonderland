@@ -23,6 +23,7 @@ export abstract class BaseCamera implements Camera {
   protected readonly logger = new Logger(this.constructor.name);
   protected onvifCam: any = null;
   protected moveTimeout: NodeJS.Timeout | null = null;
+  protected isInitializing: boolean = false;
 
   constructor(
     public id: number,
@@ -37,27 +38,43 @@ export abstract class BaseCamera implements Camera {
   abstract getLowResSource(): string;
 
   async initOnvif(): Promise<void> {
-    return new Promise((resolve) => {
-      this.onvifCam = new onvif.Cam(
-        {
-          hostname: this.ip,
-          username: this.username,
-          password: this.password,
-          port: this.onvifPort,
-          timeout: 5000,
-        },
-        (err: any) => {
-          if (err) {
-            this.logger.error(
-              `Failed to initialize ONVIF for camera ${this.id}: ${err.message}`,
-            );
+    if (this.isInitializing || this.onvifCam) return;
+    this.isInitializing = true;
 
-            return resolve();
-          }
-          this.logger.log(`ONVIF initialized for camera ${this.id}`);
-          resolve();
-        },
-      );
+    return new Promise((resolve) => {
+      try {
+        const cam = new onvif.Cam(
+          {
+            hostname: this.ip,
+            username: this.username,
+            password: this.password,
+            port: this.onvifPort,
+            timeout: 5000,
+          },
+          (err: any) => {
+            this.isInitializing = false;
+            if (err) {
+              this.logger.error(
+                `Failed to initialize ONVIF for camera ${this.id}: ${err.message}. Retrying in 10s...`,
+              );
+              this.onvifCam = null;
+              setTimeout(() => this.initOnvif(), 10000);
+              return resolve();
+            }
+            this.onvifCam = cam;
+            this.logger.log(`ONVIF initialized for camera ${this.id}`);
+            resolve();
+          },
+        );
+      } catch (error: any) {
+        this.isInitializing = false;
+        this.logger.error(
+          `Critical error during ONVIF initialization for camera ${this.id}: ${error.message}. Retrying in 10s...`,
+        );
+        this.onvifCam = null;
+        setTimeout(() => this.initOnvif(), 10000);
+        resolve();
+      }
     });
   }
 
@@ -120,8 +137,10 @@ export abstract class BaseCamera implements Camera {
       this.onvifCam.getStatus({ profileToken }, (err: any, status: any) => {
         if (err) {
           this.logger.error(
-            `Failed to get status for camera ${this.id}: ${err.message}`,
+            `Failed to get status for camera ${this.id}: ${err.message}. Triggering reconnection...`,
           );
+          this.onvifCam = null;
+          this.initOnvif();
           return resolve(null);
         }
 
