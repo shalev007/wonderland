@@ -101,15 +101,4 @@ export class CameraController {
     this.logger.log(`Patching camera ${id}...`);
     return this.cameraService.updateCamera(id, updateData);
   }
-
-  @Get('/:id/recordings')
-  @ApiOperation({ summary: 'get available recordings timespans for a camera' })
-  async getRecordings(
-    @Param('id') id: string,
-    @Query('start') start?: string,
-    @Query('end') end?: string,
-  ) {
-    this.logger.log(`Getting recordings for camera ${id}...`);
-    return this.cameraService.getRecordings(id, start, end);
-  }
 }

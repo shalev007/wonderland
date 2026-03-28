@@ -14,17 +14,10 @@ import { PlaybackRequest, ChannelRecordingsPlaylist } from './types';
 export class StandalonePlaybackController {
   constructor(private readonly playbackService: PlaybackService) {}
 
-  @Get('play')
-  async getPlayback(
-    @Query(new ValidationPipe({ transform: true })) query: PlaybackRequest,
-  ): Promise<ChannelRecordingsPlaylist> {
-    return this.playbackService.getPlayback(query);
-  }
-
   @Get('list')
   async listRecordings(
     @Query('cameraId') cameraId: string,
-    @Query('date') date: string, // YYYY-MM-DD
+    @Query('date') date: string,
   ) {
     return this.playbackService.listRecordings(cameraId, date);
   }
