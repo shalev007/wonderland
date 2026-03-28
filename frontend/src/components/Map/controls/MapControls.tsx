@@ -36,11 +36,6 @@ export const MapControls: React.FC = () => {
           isActive={isMeasurementActive}
           onClick={handleToggleMeasurement}
         />
-        <MapControlButton
-          icon={DraftingCompass}
-          isActive={isToolsActive}
-          onClick={handleToggleTools}
-        />
       </div>
     </div>
   );

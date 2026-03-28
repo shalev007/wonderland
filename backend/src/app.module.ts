@@ -7,6 +7,7 @@ import { appConfig } from './config/app.config';
 import { typeOrmConfig } from './config/typeorm.config';
 import { CameraModule } from './camera/camera.module';
 import { SelfLocationModule } from './self-location/self-location.module';
+import { SpotModule } from './spot/spot.module';
 import DHCPService from './dhcp';
 
 @Module({
@@ -23,6 +24,7 @@ import DHCPService from './dhcp';
     }),
     CameraModule,
     SelfLocationModule,
+    SpotModule,
   ],
   providers: [Logger, /*DHCPService*/],
 })

@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import { createPortal } from 'react-dom';
-import { Box, Button } from '@mantine/core';
+import { Box, Button, Stack } from '@mantine/core';
 import { MapPinSimpleArea } from '@phosphor-icons/react';
 import { useMapContextMenu } from '../../stores/useMapContextMenu';
 import { useSelfLocation } from '../../hooks/useSelfLocation';
 import { useMap } from '../../contexts/MapContext';
 import { mapContextMenuStyles } from './MapContextMenu.css';
 
-export const MapContextMenu = () => {
+interface MapContextMenuProps {
+  onMarkSpot: () => void;
+}
+
+export const MapContextMenu = ({ onMarkSpot }: MapContextMenuProps) => {
   const map = useMap();
   const { isOpen, lngLat, closeMenu } = useMapContextMenu();
   const { updateLocation, isUpdating } = useSelfLocation();
@@ -65,19 +69,36 @@ export const MapContextMenu = () => {
     closeMenu();
   };
 
+  const handleMarkSpot = () => {
+    onMarkSpot();
+    closeMenu();
+  };
+
   return createPortal(
     <Box p={2}>
-      <Button
-        variant="subtle"
-        fullWidth
-        justify="flex-start"
-        leftSection={<MapPinSimpleArea size={16} />}
-        onClick={handleSetSelfLocation}
-        loading={isUpdating}
-        className={mapContextMenuStyles.button}
-      >
-        בחר כמיקום שלי
-      </Button>
+      <Stack gap={2}>
+        <Button
+          variant="subtle"
+          fullWidth
+          justify="flex-start"
+          leftSection={<MapPinSimpleArea size={16} />}
+          onClick={handleSetSelfLocation}
+          loading={isUpdating}
+          className={mapContextMenuStyles.button}
+        >
+          בחר כמיקום שלי
+        </Button>
+        <Button
+          variant="subtle"
+          fullWidth
+          justify="flex-start"
+          leftSection={<MapPinSimpleArea size={16} weight="fill" />}
+          onClick={handleMarkSpot}
+          className={mapContextMenuStyles.button}
+        >
+          דקור איתור
+        </Button>
+      </Stack>
     </Box>,
     popupContainer
   );

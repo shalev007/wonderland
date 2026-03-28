@@ -12,6 +12,8 @@ import { CameraLayer } from './CameraLayer';
 import { MapContextMenu } from './MapContextMenu';
 import { useMapContextMenu } from '../../stores/useMapContextMenu';
 import { SelfLocationLayer } from './SelfLocationLayer';
+import { SpotLayer } from './SpotLayer';
+import { SpotModal } from './SpotModal';
 
 if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
   maplibregl.setRTLTextPlugin('/mapbox-gl-rtl-text.min.js', true);
@@ -21,6 +23,28 @@ const MapView = () => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Map | null>(null);
   const [map, setMap] = useState<Map | null>(null);
+
+  // Spot Modal State
+  const [spotModalOpened, setSpotModalOpened] = useState(false);
+  const [spotModalMode, setSpotModalMode] = useState<'create' | 'edit'>('create');
+  const [selectedSpotId, setSelectedSpotId] = useState<number | undefined>();
+  const [clickLngLat, setClickLngLat] = useState<{ lng: number; lat: number } | undefined>();
+
+  const openCreateSpot = () => {
+    const lngLat = useMapContextMenu.getState().lngLat;
+    if (lngLat) {
+      setClickLngLat(lngLat);
+      setSpotModalMode('create');
+      setSelectedSpotId(undefined);
+      setSpotModalOpened(true);
+    }
+  };
+
+  const openEditSpot = (id: number) => {
+    setSelectedSpotId(id);
+    setSpotModalMode('edit');
+    setSpotModalOpened(true);
+  };
 
   useEffect(() => {
     const mapContainer = mapContainerRef.current;
@@ -53,7 +77,9 @@ const MapView = () => {
 
     map.on('contextmenu', (e) => {
       e.preventDefault();
-      useMapContextMenu.getState().openMenu(e.point.x, e.point.y, e.lngLat.lng, e.lngLat.lat);
+      useMapContextMenu
+        .getState()
+        .openMenu(e.point.x, e.point.y, e.lngLat.lng, e.lngLat.lat);
     });
 
     mapRef.current = map;
@@ -75,10 +101,17 @@ const MapView = () => {
         <Box ref={mapContainerRef} className={mapViewStyles.mapContainer}>
           <MapControls />
           <MeasurementPanel />
-          <MapToolsOverlay />
           <CameraLayer />
           <SelfLocationLayer />
-          <MapContextMenu />
+          <SpotLayer onSpotClick={openEditSpot} />
+          <MapContextMenu onMarkSpot={openCreateSpot} />
+          <SpotModal
+            opened={spotModalOpened}
+            onClose={() => setSpotModalOpened(false)}
+            mode={spotModalMode}
+            spotId={selectedSpotId}
+            lngLat={clickLngLat}
+          />
         </Box>
       </div>
     </MapProvider>
