@@ -1,47 +1,39 @@
 services:
   demo:
   wmts:
-  tms:
-    use_grid_names: true
-    origin: nw
 
 layers:
-  - name: map_shlita
-    title: Map Shlita Israel
-    sources: [osm_cache]
   - name: ortophoto
-    title: Ortophoto
-    sources: [ortophoto_cache]
+    title: Ortophoto Israel
+    sources: [ortophoto_3857]
 
 caches:
-  osm_cache:
-    grids: [webmercator]
-    sources: [osm_tiles]
+  ortophoto_epsg4326:
+    grids: [epsg4326]
+    sources: []
+    upscale_tiles: 5
     cache:
-      type: file
-      directory: /mapproxy/config/cache_data/osm_cache
-  ortophoto_cache:
-    grids: [webmercator]
-    sources: [ortophoto_source]
-    cache:
-      type: file
-      directory: /mapproxy/config/cache_data/ortophoto_cache
+      type: geopackage
+      filename: /mapproxy/maps/orto.gpkg
+      table_name: ortophoto_israel_2025
 
-sources:
-  osm_tiles:
-    type: tile
-    url: https://tile.openstreetmap.org/%(z)s/%(x)s/%(y)s.png
-    grid: webmercator
-    http:
-      headers:
-        User-Agent: mapproxy
-  ortophoto_source:
-    type: arcgis
-    req:
-      url: https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/
+  ortophoto_3857:
+    grids: [webmercator]
+    sources: [ortophoto_epsg4326]
+    upscale_tiles: 5
+    cache:
+      type: geopackage
+      filename: /mapproxy/maps/ortophoto_3857.gpkg
+      table_name: ortophoto_israel_2025
 
 grids:
+  epsg4326:
+    srs: 'EPSG:4326'
+    origin: 'nw'
+    bbox: [-180, -90, 180, 90]
+    min_res: 0.703125
+    num_levels: 22
   webmercator:
-    srs: "EPSG:3857"
-    origin: "nw"
+    srs: 'EPSG:3857'
+    origin: 'nw'
     tile_size: [256, 256]
