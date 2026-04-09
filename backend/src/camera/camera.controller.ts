@@ -131,6 +131,17 @@ export class CameraController {
     return { success: true };
   }
 
+  @Post('/:id/day-night-mode')
+  @ApiOperation({ summary: 'set day or night mode on the camera' })
+  async setDayNightMode(
+    @Param('id') id: string,
+    @Body('mode') mode: 'day' | 'night'
+  ) {
+    this.logger.log(`Changing day/night mode for camera ${id} to ${mode}...`);
+    await this.cameraService.setCameraMode(id, mode);
+    return { success: true };
+  }
+
   @Patch('/:id')
   @ApiOperation({ summary: 'update camera metadata' })
   async patchCamera(@Param('id') id: string, @Body() updateData: any) {

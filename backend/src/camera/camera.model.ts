@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import axios from 'axios';
 import { CameraType } from '@/enum/enums';
 import { calculateFOV } from './utils';
 
@@ -17,6 +18,8 @@ export interface Camera {
   getThermalHighResSource(): string;
   getThermalLowResSource(): string;
   hasThermal(): boolean;
+  dayNightModeStrategy: 'stream' | 'api' | 'none';
+  setDayNightMode(mode: 'day' | 'night'): Promise<void>;
   initOnvif(): Promise<void>;
   handleMoveRequest(
     pan: number,
@@ -38,6 +41,7 @@ export abstract class BaseCamera implements Camera {
   protected moveTimeout: NodeJS.Timeout | null = null;
   protected focusTimeout: NodeJS.Timeout | null = null;
   protected isInitializing: boolean = false;
+  public dayNightModeStrategy: 'stream' | 'api' | 'none' = 'none';
 
   constructor(
     public id: number,
@@ -61,6 +65,10 @@ export abstract class BaseCamera implements Camera {
 
   hasThermal(): boolean {
     return false;
+  }
+
+  async setDayNightMode(mode: 'day' | 'night'): Promise<void> {
+    // Default implementation does nothing
   }
 
   async initOnvif(): Promise<void> {
@@ -289,6 +297,41 @@ export abstract class BaseCamera implements Camera {
 }
 
 export class SimplePtzCamera extends BaseCamera {
+  public dayNightModeStrategy: 'stream' | 'api' | 'none' = 'api';
+
+  async setDayNightMode(mode: 'day' | 'night'): Promise<void> {
+    this.logger.log(`SimplePtzCamera ${this.id}: Changing to ${mode} mode`);
+    try {
+      const uidResponse = await axios.get(
+        `http://${this.ip}/cgi-bin/getuid?username=${this.username}&password=${this.password}`,
+      );
+      const uidMatch = uidResponse.data.toString().match(/<uid>(.*?)<\/uid>/);
+      const uid = uidMatch ? uidMatch[1] : null;
+
+      if (!uid) {
+        this.logger.error(
+          `SimplePtzCamera ${this.id}: Could not fetch UID from camera. Response: ${uidResponse.data}`,
+        );
+        return;
+      }
+
+      this.logger.log(
+        `SimplePtzCamera ${this.id}: Fetched UID: ${uid}. Sending ircut command...`,
+      );
+
+      // The camera's IRCUT behavior is inverted: sending 'day' sets it to night mode and vice versa.
+      const invertedMode = mode === 'day' ? 'night' : 'day';
+      await axios.get(
+        `http://${this.ip}/cgi-bin/set_ircut?ircutmode=3&uid=${uid}&time=${invertedMode}`,
+      );
+      this.logger.log(`SimplePtzCamera ${this.id}: Successfully set mode to ${mode} (sent ${invertedMode} to camera)`);
+    } catch (error: any) {
+      this.logger.error(
+        `SimplePtzCamera ${this.id}: Failed to set day/night mode: ${error.message}`,
+      );
+    }
+  }
+
   getHighResSource(): string {
     return `rtsp://${this.username}:${this.password}@${this.ip}:554/cam/realmonitor?channel=1&subtype=0&unicast=true&proto=Onvif`;
   }
@@ -301,9 +344,9 @@ export class SimplePtzCamera extends BaseCamera {
     const status = await super.getPTZStatus();
     if (!status) return null;
 
-    // We invert the pan value for SimplePtzCamera because it reports an absolute 
-    // pan status that is opposite to the standard geographic rotation. 
-    // Inverting it ensures that panning Right (positive speed) results in 
+    // We invert the pan value for SimplePtzCamera because it reports an absolute
+    // pan status that is opposite to the standard geographic rotation.
+    // Inverting it ensures that panning Right (positive speed) results in
     // an increasing azimuth (Clockwise) on the map.
     return {
       ...status,
@@ -317,6 +360,8 @@ export class SimplePtzCamera extends BaseCamera {
 }
 
 export class ThermalPtzCamera extends BaseCamera {
+  public dayNightModeStrategy: 'stream' | 'api' | 'none' = 'stream';
+
   getHighResSource(): string {
     return `rtsp://${this.username}:${this.password}@${this.ip}:554/Stream/Live/101?transportmode=unicast&profile=ONFProfileToken_101`;
   }

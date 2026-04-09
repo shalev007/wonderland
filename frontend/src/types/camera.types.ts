@@ -8,4 +8,5 @@ export interface Camera {
   initialAzimuth?: number;
   availability: 'AVAILABLE' | 'UNAVAILABLE';
   hasThermal?: boolean;
+  dayNightModeStrategy?: 'stream' | 'api' | 'none';
 }

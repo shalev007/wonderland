@@ -17,6 +17,7 @@ export const zoomIn = (id: string, isThermal?: boolean) => axios.post(`${backend
 export const zoomOut = (id: string, isThermal?: boolean) => axios.post(`${backendUrl}/cameras/${id}/zoom-out${isThermal ? '?isThermal=true' : ''}`);
 export const focusIn = (id: string, isThermal?: boolean) => axios.post(`${backendUrl}/cameras/${id}/focus-in${isThermal ? '?isThermal=true' : ''}`);
 export const focusOut = (id: string, isThermal?: boolean) => axios.post(`${backendUrl}/cameras/${id}/focus-out${isThermal ? '?isThermal=true' : ''}`);
+export const setCameraDayNightMode = (id: string, mode: 'day' | 'night') => axios.post(`${backendUrl}/cameras/${id}/day-night-mode`, { mode });
 
 export const updateCamera = (id: string, data: Partial<Camera>) =>
   axios.patch(`${backendUrl}/cameras/${id}`, data);

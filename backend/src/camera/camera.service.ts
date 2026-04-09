@@ -152,6 +152,14 @@ export class CameraService implements OnModuleInit {
     camera.stop();
   }
 
+  async setCameraMode(id: string, mode: 'day' | 'night') {
+    const camera = this.cameras.find((c) => c.id.toString() === id);
+    if (!camera) {
+      throw new Error(`Camera with ID ${id} not found`);
+    }
+    await camera.setDayNightMode(mode);
+  }
+
   async focusCamera(id: string, speed: number, isThermal: boolean = false) {
     const camera = this.cameras.find((c) => c.id.toString() === id);
     if (!camera) {
@@ -257,6 +265,7 @@ export class CameraService implements OnModuleInit {
         initialAzimuth: entity?.initialAzimuth,
         position: entity?.position,
         hasThermal: camera.hasThermal(),
+        dayNightModeStrategy: camera.dayNightModeStrategy,
       };
     });
   }
