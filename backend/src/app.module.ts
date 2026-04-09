@@ -26,6 +26,6 @@ import DHCPService from './dhcp';
     SelfLocationModule,
     SpotModule,
   ],
-  providers: [Logger, /*DHCPService*/],
+  providers: [Logger /*DHCPService*/],
 })
 export class AppModule {}

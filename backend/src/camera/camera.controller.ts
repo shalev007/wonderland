@@ -115,6 +115,22 @@ export class CameraController {
     return { success: true };
   }
 
+  @Post('/:id/focus-in')
+  @ApiOperation({ summary: 'focus in camera' })
+  async focusIn(@Param('id') id: string, @Query('isThermal') isThermal?: string) {
+    this.logger.log(`Focusing camera ${id} in (isThermal: ${isThermal})...`);
+    await this.cameraService.focusCamera(id, 1, isThermal === 'true');
+    return { success: true };
+  }
+
+  @Post('/:id/focus-out')
+  @ApiOperation({ summary: 'focus out camera' })
+  async focusOut(@Param('id') id: string, @Query('isThermal') isThermal?: string) {
+    this.logger.log(`Focusing camera ${id} out (isThermal: ${isThermal})...`);
+    await this.cameraService.focusCamera(id, -1, isThermal === 'true');
+    return { success: true };
+  }
+
   @Patch('/:id')
   @ApiOperation({ summary: 'update camera metadata' })
   async patchCamera(@Param('id') id: string, @Body() updateData: any) {

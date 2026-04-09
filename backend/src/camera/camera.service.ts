@@ -152,6 +152,14 @@ export class CameraService implements OnModuleInit {
     camera.stop();
   }
 
+  async focusCamera(id: string, speed: number, isThermal: boolean = false) {
+    const camera = this.cameras.find((c) => c.id.toString() === id);
+    if (!camera) {
+      throw new Error(`Camera with ID ${id} not found`);
+    }
+    camera.handleFocusRequest(speed, isThermal);
+  }
+
   async updateCamera(id: string, updateData: Partial<CameraEntity>) {
     const numericId = parseInt(id);
     const entity = await this.cameraRepository.findOne({

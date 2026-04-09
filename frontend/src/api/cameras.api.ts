@@ -15,6 +15,8 @@ export const rotateLeft = (id: string, isThermal?: boolean, sensitivity?: number
 export const rotateRight = (id: string, isThermal?: boolean, sensitivity?: number) => axios.post(`${backendUrl}/cameras/${id}/rotate-right?${new URLSearchParams({ ...(isThermal && { isThermal: 'true' }), ...(sensitivity && { sensitivity: sensitivity.toString() }) }).toString()}`);
 export const zoomIn = (id: string, isThermal?: boolean) => axios.post(`${backendUrl}/cameras/${id}/zoom-in${isThermal ? '?isThermal=true' : ''}`);
 export const zoomOut = (id: string, isThermal?: boolean) => axios.post(`${backendUrl}/cameras/${id}/zoom-out${isThermal ? '?isThermal=true' : ''}`);
+export const focusIn = (id: string, isThermal?: boolean) => axios.post(`${backendUrl}/cameras/${id}/focus-in${isThermal ? '?isThermal=true' : ''}`);
+export const focusOut = (id: string, isThermal?: boolean) => axios.post(`${backendUrl}/cameras/${id}/focus-out${isThermal ? '?isThermal=true' : ''}`);
 
 export const updateCamera = (id: string, data: Partial<Camera>) =>
   axios.patch(`${backendUrl}/cameras/${id}`, data);

@@ -14,7 +14,9 @@ import {
   rotateLeft, 
   rotateRight, 
   zoomIn, 
-  zoomOut 
+  zoomOut,
+  focusIn,
+  focusOut
 } from '@api/cameras.api';
 import { ptzStyles } from './PTZControl.css';
 
@@ -28,9 +30,9 @@ const PTZControl = ({ cameraId, isThermal }: PTZControlProps) => {
   const [sensitivity, setSensitivity] = useState(5);
 
   const startAction = (action: (id: string, isThermal?: boolean, sensitivity?: number) => Promise<any>) => {
-    // Only apply sensitivity to pan/tilt actions, not zoom
-    const isZoomAction = action === zoomIn || action === zoomOut;
-    const s = isZoomAction ? undefined : sensitivity / 10;
+    // Only apply sensitivity to pan/tilt actions, not zoom or focus
+    const isSpecialAction = action === zoomIn || action === zoomOut || action === focusIn || action === focusOut;
+    const s = isSpecialAction ? undefined : sensitivity / 10;
     
     // Initial call
     action(cameraId, isThermal, s);
@@ -38,7 +40,7 @@ const PTZControl = ({ cameraId, isThermal }: PTZControlProps) => {
     // Start interval
     intervalRef.current = setInterval(() => {
       action(cameraId, isThermal, s);
-    }, 500);
+    }, 200);
   };
 
   const stopAction = () => {
@@ -83,23 +85,50 @@ const PTZControl = ({ cameraId, isThermal }: PTZControlProps) => {
         <ControlButton icon={CaretDown} action={moveDown} gridArea="3 / 2" />
       </Box>
 
-      <Box className={ptzStyles.zoomContainer}>
-        <UnstyledButton 
-          className={ptzStyles.zoomButton}
-          onMouseDown={() => startAction(zoomIn)}
-          onMouseUp={stopAction}
-          onMouseLeave={stopAction}
-        >
-          <Plus size={14} weight="bold" />
-        </UnstyledButton>
-        <UnstyledButton 
-          className={ptzStyles.zoomButton}
-          onMouseDown={() => startAction(zoomOut)}
-          onMouseUp={stopAction}
-          onMouseLeave={stopAction}
-        >
-          <Minus size={14} weight="bold" />
-        </UnstyledButton>
+      <Box className={ptzStyles.extraControlsContainer}>
+        <Box className={ptzStyles.extraGroup}>
+          <Text className={ptzStyles.groupTitle}>זום</Text>
+          <Box className={ptzStyles.zoomContainer}>
+            <UnstyledButton 
+              className={ptzStyles.zoomButton}
+              onMouseDown={() => startAction(zoomIn)}
+              onMouseUp={stopAction}
+              onMouseLeave={stopAction}
+            >
+              <Plus size={12} weight="bold" />
+            </UnstyledButton>
+            <UnstyledButton 
+              className={ptzStyles.zoomButton}
+              onMouseDown={() => startAction(zoomOut)}
+              onMouseUp={stopAction}
+              onMouseLeave={stopAction}
+            >
+              <Minus size={12} weight="bold" />
+            </UnstyledButton>
+          </Box>
+        </Box>
+
+        <Box className={ptzStyles.extraGroup}>
+          <Text className={ptzStyles.groupTitle}>פוקוס</Text>
+          <Box className={ptzStyles.focusContainer}>
+            <UnstyledButton 
+              className={ptzStyles.focusButton}
+              onMouseDown={() => startAction(focusIn)}
+              onMouseUp={stopAction}
+              onMouseLeave={stopAction}
+            >
+              <Plus size={10} weight="bold" />
+            </UnstyledButton>
+            <UnstyledButton 
+              className={ptzStyles.focusButton}
+              onMouseDown={() => startAction(focusOut)}
+              onMouseUp={stopAction}
+              onMouseLeave={stopAction}
+            >
+              <Minus size={10} weight="bold" />
+            </UnstyledButton>
+          </Box>
+        </Box>
       </Box>
 
       <Box className={ptzStyles.sensitivityContainer}>

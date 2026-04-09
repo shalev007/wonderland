@@ -6,11 +6,13 @@ export const ptzStyles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: space.spacing2,
-    padding: space.spacing2,
+    gap: '4px',
+    padding: '12px 8px 8px 8px',
     background: colors.surface,
     borderRadius: radius.borderRadiusMax2,
     border: `1px solid ${colors.neutralAlpha3}`,
+    width: 'fit-content',
+    minWidth: '150px',
   }),
 
   grid: style({
@@ -23,8 +25,8 @@ export const ptzStyles = {
   }),
 
   controlButton: style({
-    width: '32px',
-    height: '32px',
+    width: '28px',
+    height: '28px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -44,13 +46,33 @@ export const ptzStyles = {
 
   zoomContainer: style({
     display: 'flex',
-    gap: space.spacing1,
-    marginTop: space.spacing1,
+    gap: '2px',
+  }),
+
+  focusContainer: style({
+    display: 'flex',
+    gap: '2px',
+  }),
+
+  extraControlsContainer: style({
+    display: 'flex',
+    width: '100%',
+    justifyContent: 'space-evenly',
+    alignItems: 'flex-end',
+    marginTop: '8px',
+    padding: '0 4px',
+  }),
+
+  extraGroup: style({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '4px',
   }),
 
   zoomButton: style({
-    width: '48px',
-    height: '28px',
+    width: '38px',
+    height: '24px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -69,13 +91,45 @@ export const ptzStyles = {
       color: colors.accentContrast,
     },
   }),
+
+  focusButton: style({
+    width: '38px',
+    height: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.borderRadiusMax1,
+    backgroundColor: colors.neutralAlpha3,
+    color: colors.textPrimary,
+    cursor: 'pointer',
+    fontSize: typography.fontSize1,
+    fontWeight: typography.fontWeightMedium,
+    transition: 'background-color 100ms ease',
+    border: `1px dashed ${colors.neutralAlpha5}`,
+    ':hover': {
+      backgroundColor: colors.neutralAlpha5,
+    },
+    ':active': {
+      backgroundColor: colors.accent8,
+      color: colors.accentContrast,
+    },
+  }),
+
+  groupTitle: style({
+    fontSize: '10px',
+    color: colors.textPrimary,
+    opacity: 0.4,
+    textTransform: 'uppercase',
+    fontWeight: 700,
+    letterSpacing: '0.05em',
+  }),
   
   sensitivityContainer: style({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    gap: space.spacing1,
-    marginTop: space.spacing2,
+    gap: '2px',
+    marginTop: '4px',
     padding: `0 ${space.spacing1}`,
   }),
 
@@ -105,9 +159,13 @@ export const ptzStyles = {
       backgroundColor: colors.accent8,
       border: `2px solid ${colors.accentContrast}`,
       boxShadow: `0 0 10px ${colors.accent8}`,
-      transition: 'transform 100ms ease',
+      transition: 'box-shadow 150ms ease, border-color 150ms ease',
       ':hover': {
-        transform: 'scale(1.2)',
+        boxShadow: `0 0 0 4px ${colors.accent8}33, 0 0 15px ${colors.accent8}`,
+        cursor: 'grab',
+      },
+      ':active': {
+        cursor: 'grabbing',
       },
     }),
   },

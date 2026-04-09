@@ -25,15 +25,18 @@ export interface Camera {
     isThermal?: boolean,
     sensitivity?: number,
   ): void;
+  handleFocusRequest(speed: number, isThermal?: boolean): void;
   getPTZStatus(): Promise<{ pan: number; zoom: number } | null>;
   calculateFOV(zoom: number): number;
   stop(): void;
+  stopFocus(isThermal?: boolean): void;
 }
 
 export abstract class BaseCamera implements Camera {
   protected readonly logger = new Logger(this.constructor.name);
   protected onvifCam: any = null;
   protected moveTimeout: NodeJS.Timeout | null = null;
+  protected focusTimeout: NodeJS.Timeout | null = null;
   protected isInitializing: boolean = false;
 
   constructor(
@@ -117,6 +120,16 @@ export abstract class BaseCamera implements Camera {
     }, 500);
   }
 
+  handleFocusRequest(speed: number, isThermal: boolean = false): void {
+    this.focus(speed, isThermal);
+    if (this.focusTimeout) {
+      clearTimeout(this.focusTimeout);
+    }
+    this.focusTimeout = setTimeout(() => {
+      this.stopFocus(isThermal);
+    }, 200);
+  }
+
   protected move(
     pan: number,
     tilt: number,
@@ -132,9 +145,7 @@ export abstract class BaseCamera implements Camera {
     }
 
     try {
-      const profileToken =
-        this.onvifCam.activeSource?.profileToken ||
-        this.onvifCam.profiles[0]?.['$']?.token;
+      const profileToken = this.getProfileToken(isThermal);
       if (!profileToken) {
         this.logger.warn(`No active ONVIF profile found for camera ${this.id}`);
         return;
@@ -157,12 +168,49 @@ export abstract class BaseCamera implements Camera {
     }
   }
 
-  protected getProfileToken() {
-    const profileToken =
-      this.onvifCam.activeSource?.profileToken ||
-      this.onvifCam.profiles[0]?.['$']?.token;
+  protected focus(speed: number, isThermal: boolean = false): void {
+    if (!this.onvifCam) {
+      this.logger.warn(
+        `Cannot handle focus request: ONVIF not initialized for camera ${this.id}`,
+      );
+      return;
+    }
 
-    return profileToken;
+    try {
+      const videoSourceToken = this.getVideoSourceToken(isThermal);
+      if (!videoSourceToken) {
+        this.logger.warn(
+          `No VideoSourceToken found for camera ${this.id} (isThermal: ${isThermal})`,
+        );
+        return;
+      }
+
+      this.onvifCam.imagingMove({
+        token: videoSourceToken,
+        continuous: { speed },
+      });
+      this.logger.log(
+        `ONVIF focus request for camera ${this.id} (isThermal: ${isThermal}): speed=${speed}`,
+      );
+    } catch (e: any) {
+      this.logger.error(
+        `ONVIF focus move error on camera ${this.id}: ${e.message}`,
+      );
+    }
+  }
+
+  protected getProfileToken(isThermal: boolean = false) {
+    if (this.onvifCam.activeSource?.profileToken) {
+      return this.onvifCam.activeSource.profileToken;
+    }
+    return this.onvifCam.profiles[0]?.['$']?.token;
+  }
+
+  protected getVideoSourceToken(isThermal: boolean = false): string | null {
+    if (this.onvifCam.activeSource?.sourceToken) {
+      return this.onvifCam.activeSource.sourceToken;
+    }
+    return this.onvifCam.videoSources[0]?.['$']?.token || null;
   }
 
   async getPTZStatus(): Promise<{ pan: number; zoom: number } | null> {
@@ -205,9 +253,7 @@ export abstract class BaseCamera implements Camera {
     if (!this.onvifCam) return;
 
     try {
-      const profileToken =
-        this.onvifCam.activeSource?.profileToken ||
-        this.onvifCam.profiles[0]?.['$']?.token;
+      const profileToken = this.getProfileToken();
       if (!profileToken) return;
 
       this.onvifCam.stop({
@@ -217,6 +263,27 @@ export abstract class BaseCamera implements Camera {
       });
     } catch (e: any) {
       this.logger.error(`ONVIF stop error on camera ${this.id}: ${e.message}`);
+    }
+  }
+
+  stopFocus(isThermal: boolean = false): void {
+    if (this.focusTimeout) {
+      clearTimeout(this.focusTimeout);
+      this.focusTimeout = null;
+    }
+    if (!this.onvifCam) return;
+
+    try {
+      const videoSourceToken = this.getVideoSourceToken(isThermal);
+      if (!videoSourceToken) return;
+
+      this.onvifCam.imagingStop({
+        token: videoSourceToken,
+      });
+    } catch (e: any) {
+      this.logger.error(
+        `ONVIF imaging stop error on camera ${this.id}: ${e.message}`,
+      );
     }
   }
 }
@@ -261,10 +328,17 @@ export class ThermalPtzCamera extends BaseCamera {
     return `rtsp://${this.username}:${this.password}@${this.ip}:554/Stream/Live/202?transportmode=unicast&profile=ONFProfileToken_202`;
   }
 
-  protected getProfileToken() {
-    const profileToken = 'ONFProfileToken_101';
-
+  protected getProfileToken(isThermal: boolean = false) {
+    const profileToken = isThermal
+      ? 'ONFProfileToken_201'
+      : 'ONFProfileToken_101';
     return profileToken;
+  }
+
+  protected getVideoSourceToken(isThermal: boolean = false): string | null {
+    // Thermal cameras usually have VideoSource_1 for Day and VideoSource_2 for Thermal
+    const token = isThermal ? 'VideoSource_2' : 'VideoSource_1';
+    return token;
   }
 
   move(
